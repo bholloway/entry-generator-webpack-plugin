@@ -1,5 +1,7 @@
 # Entry Generator Webpack Plugin
 
+[![NPM](https://nodei.co/npm/entry-generator-webpack-plugin.png)](http://github.com/bholloway/entry-generator-webpack-plugin)
+
 A Webpack plugin to dynamically generate an entry file on compiler initialisation
 
 ## Rationale
