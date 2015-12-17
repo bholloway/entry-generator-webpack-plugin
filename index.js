@@ -1,10 +1,10 @@
 'use strict';
 
-var path = require('path'),
-    fs   = require('fs');
+var path = require('path');
 
 var assign = require('lodash.assign'),
-    q      = require('q');
+    q      = require('q'),
+    fsp    = require('fs-promise');
 
 var PLUGIN_NAME = require('./package.json').name;
 
@@ -44,17 +44,25 @@ function apply(compiler) {
   compiler.plugin('watch-run', onRun);
 
   function onRun(unused, done) {
+    fsp.exists(outputFile)
+      .then(onExistsGetSources)
+      .then(onSourcesWriteFile)
+      .catch(onError)
+      .finally(done);
 
-    // invoke sources in parallel
-    q.all(sources.map(eachSourceAsync))
-      .then(onSources)
-      .catch(onError);
+    function onExistsGetSources(isExist) {
+      if (isExist) {
+        return q.reject();
+      } else {
+        return q.all(sources.map(eachSourceAsync));
+      }
 
-    function eachSourceAsync(source) {
-      return source.call(compiler, outputPath);
+      function eachSourceAsync(source) {
+        return source.call(compiler, outputPath);
+      }
     }
 
-    function onSources(list) {
+    function onSourcesWriteFile(list) {
       var text = list
         .reduce(flatten, [])
         .filter(Boolean)
@@ -62,7 +70,7 @@ function apply(compiler) {
         .map(toRequireStatement)
         .join('\n');
 
-      fs.writeFile(path.resolve(outputFile), text, done);
+      return fsp.writeFile(path.resolve(outputFile), text);
 
       function flatten(list, value) {
         return value ? list.concat(value) : list;
