@@ -51,15 +51,15 @@ The sources are one or more `function([outputPath:string]):Array.<string>|Promis
 
 There are a number of source factories exported on `EntryGeneratorWebpackPlugin`, these include:
 
-* `EntryGeneratorWebpackPlugin.bowerDependenciesSource([options])`
+* **`EntryGeneratorWebpackPlugin.bowerDependenciesSource([options])`**
 
 	A source factory that will list bower modules from the **`dependencies`** field of the `bower.json` file in the Webpack `context` directory. The `options` may include any of the standard Webpack file filters (although applied to the module names), meaning `test`, `include`, `exclude`.
 
 
-* `EntryGeneratorWebpackPlugin.bowerDevDependenciesSource([options])`
+* **`EntryGeneratorWebpackPlugin.bowerDevDependenciesSource([options])`**
 
 	As above, for the **`devDependencies`** field.
 
-* `EntryGeneratorWebpackPlugin.globSource(pattern, [options])`
+* **`EntryGeneratorWebpackPlugin.globSource(pattern, [options])`**
 
 	A source factory that can glob files rooted in the Webpack `context` directory. It supports `options` per [glob properties](https://www.npmjs.com/package/glob#properties). The `options` may also include any of the standard Webpack file filters (although applied to the module names), meaning `test`, `include`, `exclude`. Note however that it is more efficient to use the glob `ignore` property than the Webpack `exclude` regular expression.
