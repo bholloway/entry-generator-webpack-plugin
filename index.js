@@ -47,12 +47,11 @@ function apply(compiler) {
     fsp.exists(outputFile)
       .then(onExistsGetSources)
       .then(onSourcesWriteFile)
-      .catch(onError)
       .finally(done);
 
     function onExistsGetSources(isExist) {
       if (isExist) {
-        return q.reject();
+        return q.when();
       } else {
         return q.all(sources.map(eachSourceAsync));
       }
@@ -63,14 +62,14 @@ function apply(compiler) {
     }
 
     function onSourcesWriteFile(list) {
-      var text = list
+      var text = list && list
         .reduce(flatten, [])
         .filter(Boolean)
         .filter(firstOccurrence)
         .map(toRequireStatement)
         .join('\n');
 
-      return fsp.writeFile(path.resolve(outputFile), text);
+      return text ? fsp.writeFile(path.resolve(outputFile), text) : q.when();
 
       function flatten(list, value) {
         return value ? list.concat(value) : list;
@@ -83,10 +82,6 @@ function apply(compiler) {
       function toRequireStatement(value) {
         return 'require(\'' + value + '\');';
       }
-    }
-
-    function onError(error) {
-      throw new Error(PLUGIN_NAME + ': ' + error.message)
     }
   }
 }
