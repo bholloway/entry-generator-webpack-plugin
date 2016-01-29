@@ -1,6 +1,6 @@
 {
   "name": "entry-generator-webpack-plugin",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A Webpack plugin to dynamically generate an entry file on compiler initialisation",
   "main": "index.js",
   "repository": {

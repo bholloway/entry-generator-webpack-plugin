@@ -80,7 +80,8 @@ function apply(compiler) {
       }
 
       function toRequireStatement(value) {
-        return 'require(\'' + value + '\');';
+        var posixPath = value.replace(/\\/g, '/');
+        return 'require(\'' + posixPath + '\');';
       }
     }
   }
