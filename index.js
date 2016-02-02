@@ -36,7 +36,8 @@ module.exports = assign(EntryGeneratorWebpackPlugin, {
 });
 
 function apply(compiler) {
-  var outputFile = this.outputFile,
+  var basePath   = compiler.context || process.cwd(),
+      outputFile = path.resolve(basePath, this.outputFile),
       sources    = this.sources,
       outputPath = path.dirname(outputFile);
 
@@ -62,14 +63,21 @@ function apply(compiler) {
     }
 
     function onSourcesWriteFile(list) {
-      var text = list && list
-        .reduce(flatten, [])
-        .filter(Boolean)
-        .filter(firstOccurrence)
-        .map(toRequireStatement)
-        .join('\n');
+      if (list) {
+        var text = list
+          .reduce(flatten, [])
+          .filter(Boolean)
+          .filter(firstOccurrence)
+          .map(toRequireStatement)
+          .join('\n');
 
-      return text ? fsp.writeFile(path.resolve(outputFile), text) : q.when();
+        return fsp.exists(outputPath)
+          .then(makeDir)
+          .then(writeFile);
+      }
+      else {
+        return q.when();
+      }
 
       function flatten(list, value) {
         return value ? list.concat(value) : list;
@@ -82,6 +90,14 @@ function apply(compiler) {
       function toRequireStatement(value) {
         var posixPath = value.replace(/\\/g, '/');
         return 'require(\'' + posixPath + '\');';
+      }
+
+      function makeDir(isExist) {
+        return isExist ? q.when() : fsp.mkdir(outputPath);
+      }
+
+      function writeFile() {
+        return fsp.writeFile(path.resolve(outputFile), text);
       }
     }
   }

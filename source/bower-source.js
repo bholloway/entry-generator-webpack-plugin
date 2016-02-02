@@ -22,7 +22,7 @@ function bowerSource(key) {
         fsp                   = require('fs-promise');
 
     return function list() {
-      var basePath = this.context || '',
+      var basePath = this.context || process.cwd(),
           deferred = q.defer();
       bowerDirectory({cwd: basePath}, onBower);
       return deferred.promise;
