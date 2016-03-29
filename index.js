@@ -48,7 +48,8 @@ function apply(compiler) {
     fsp.exists(outputFile)
       .then(onExistsGetSources)
       .then(onSourcesWriteFile)
-      .finally(done);
+      .catch(onError)
+      .then(done);
 
     function onExistsGetSources(isExist) {
       if (isExist) {
@@ -58,7 +59,7 @@ function apply(compiler) {
       }
 
       function eachSourceAsync(source) {
-        return source.call(compiler, outputPath);
+        return q.when(source.call(compiler, outputPath) || []);
       }
     }
 
@@ -99,6 +100,10 @@ function apply(compiler) {
       function writeFile() {
         return fsp.writeFile(path.resolve(outputFile), text);
       }
+    }
+
+    function onError(message) {
+      done(PLUGIN_NAME + ': ' + message.split(/[:\n]+\w*/).join('\n  '));
     }
   }
 }

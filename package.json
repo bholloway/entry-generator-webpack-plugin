@@ -1,6 +1,6 @@
 {
   "name": "entry-generator-webpack-plugin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Webpack plugin to dynamically generate an entry file on compiler initialisation",
   "main": "index.js",
   "repository": {
@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/bholloway/entry-generator-webpack-plugin",
   "dependencies": {
-    "bower-directory": "^1.0.0",
     "fs-promise": "^0.3.1",
     "glob-promise": "^1.0.4",
     "lodash.assign": "^3.2.0",

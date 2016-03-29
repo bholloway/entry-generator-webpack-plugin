@@ -14,47 +14,43 @@ function bowerSource(key) {
    */
   return function bowerSourceForKey(options) {
 
-    var path = require('path');
+    var path = require('path'),
+        fs   = require('fs');
 
     var ModuleFilenameHelpers = require('webpack/lib/ModuleFilenameHelpers'),
-        bowerDirectory        = require('bower-directory'),
         q                     = require('q'),
         fsp                   = require('fs-promise');
 
     return function list() {
-      var basePath = this.context || process.cwd(),
-          deferred = q.defer();
-      bowerDirectory({cwd: basePath}, onBower);
-      return deferred.promise;
+      var basePath  = this.context || process.cwd(),
+          bowerFile = path.join(basePath, 'bower.json'),
+          hasBower  = fs.existsSync(bowerFile) && fs.statSync(bowerFile).isFile();
 
-      function onBower(error, bowerDir) {
-        if (error) {
-          deferred.reject(new Error('cannot locate bower components as sub-directory of the Webpack context'));
+      if (hasBower) {
+        var bowerrcFile = path.resolve(basePath, '.bowerrc'),
+            hasRcFile   = fs.existsSync(bowerrcFile) && fs.statSync(bowerrcFile).isFile();
+
+        return (hasRcFile && readJson(bowerrcFile) || q.when())
+          .then(getDirectoryField)
+          .then(onBowerPath);
+      }
+
+      function getDirectoryField(json) {
+        if (json && (typeof json.directory === 'string')) {
+          return json.directory;
         } else {
-          deferred.resolve(bowerJson(path.resolve(basePath, 'bower.json'), key));
+          return 'bower_components';
         }
+      }
+
+      function onBowerPath(bowerDir) {
+        return bowerJson(path.join(basePath, 'bower.json'), key);
 
         function bowerJson(jsonFilePath, key) {
-          return fsp.exists(jsonFilePath)
-            .then(onExistsReadFile)
-            .then(onReadProcessJson)
-            .catch(onError);
+          return readJson(jsonFilePath)
+            .then(onJson);
 
-          function onExistsReadFile(isExist) {
-            if (isExist) {
-              return fsp.readFile(jsonFilePath)
-            } else {
-              return q.reject(new Error('expected bower.json file ' + jsonFilePath))
-            }
-          }
-
-          function onReadProcessJson(buffer) {
-            var json;
-            try {
-              json = JSON.parse(buffer.toString());
-            } catch (exception) {
-              return q.reject(new Error('cannot parse bower.json file ' + jsonFilePath));
-            }
+          function onJson(json) {
             var moduleNames = (json[key] && Object.keys(json[key]) || [])
               .filter(ModuleFilenameHelpers.matchObject.bind(undefined, options || {}));
 
@@ -62,12 +58,8 @@ function bowerSource(key) {
               .then(flatten);
           }
 
-          function onError() {
-            return q.reject(new Error('cannot read bower.json file ' + jsonFilePath));
-          }
-
           function recurseModule(name) {
-            return bowerJson(path.resolve(bowerDir, name, 'bower.json'), 'dependencies')
+            return bowerJson(path.resolve(basePath, bowerDir, name, 'bower.json'), 'dependencies')
               .then(flatten)
               .then(onRecursed);
 
@@ -87,6 +79,28 @@ function bowerSource(key) {
 
           function firstOccurrence(value, i, array) {
             return (array.indexOf(value) === i);
+          }
+        }
+      }
+    };
+
+    function readJson(fullPath) {
+      return fsp.exists(fullPath)
+        .then(onExistsReadFile);
+
+      function onExistsReadFile(isExist) {
+        if (isExist) {
+          return fsp.readFile(fullPath)
+            .then(onReadProcessJson);
+        } else {
+          return q.reject('expected json file: ' + fullPath)
+        }
+
+        function onReadProcessJson(buffer) {
+          try {
+            return JSON.parse(buffer.toString());
+          } catch (exception) {
+            return q.reject('cannot parse json file: ' + fullPath);
           }
         }
       }
