@@ -25,6 +25,7 @@
     "glob-promise": "^1.0.4",
     "lodash.assign": "^3.2.0",
     "q": "^1.4.1",
+    "require-path-relative": "^1.0.1",
     "webpack": "^1.12.9"
   }
 }
