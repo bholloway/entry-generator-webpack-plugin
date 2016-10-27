@@ -10,7 +10,7 @@
  */
 function globSource(pattern, options) {
   return function list(outputPath) {
-    var path = require('path');
+    var relative = require('require-path-relative');
 
     var ModuleFilenameHelpers = require('webpack/lib/ModuleFilenameHelpers'),
         glob                  = require('glob-promise');
@@ -29,7 +29,7 @@ function globSource(pattern, options) {
         .map(eachRelative);
 
       function eachRelative(value) {
-        return path.relative(outputPath, value);
+        return relative(outputPath, value, '.');
       }
     }
   }
